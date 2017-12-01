@@ -1,31 +1,28 @@
 defmodule Day01 do
     
     def run(input) do
-      numbers = parse(input)
-      pairs = Enum.zip(numbers, tl(numbers) ++ [hd(numbers)])
-
-      Enum.reduce(pairs, 0, fn(pair, acc) ->
-        case pair do
-          { x, x } -> acc + x
-          _ -> acc
-        end
-      end)
+      solve(input, fn _ -> 1 end)
     end
 
     def run_part2(input) do
+      solve(input, fn length -> div(length, 2) end)
+    end
+
+    def solve(input, stepfn) do
       numbers = parse(input)
       length = Enum.count(numbers)
-      step = div(length, 2)
+      step = stepfn.(length)
 
       numbers
       |> Stream.with_index
       |> Enum.reduce(0, fn({ number, index }, acc) ->
-        other_index = rem(index + step, length)
-        cond do
-          Enum.at(numbers,  other_index) == number -> acc + number
-          true -> acc
+        other_number = Enum.at(numbers, rem(index + step, length))
+        case { number, other_number } do
+          { x, x } -> acc + x
+          _ -> acc
         end
       end)
+
     end
 
     def parse(input) do
