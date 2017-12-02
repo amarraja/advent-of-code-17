@@ -25,15 +25,12 @@ defmodule Day02 do
   end
 
   def divisible_rows(row) do
-    row
-    |> Enum.find_value(fn num ->
-      others = Enum.reject(row, &(num == &1))
-      Enum.find_value(others, fn other ->
-        case rem(num, other) do
-          0 -> div(num, other)
-          _ -> false
-        end
-      end)
+    pairs = for x <- row, y <- row, x != y, do: {x, y}
+    Enum.find_value(pairs, fn {x, y} ->
+      case rem(x, y) do
+        0 -> div(x, y)
+        _ -> false
+      end
     end)
   end
 
