@@ -25,13 +25,8 @@ defmodule Day02 do
   end
 
   def divisible_rows(row) do
-    pairs = for x <- row, y <- row, x != y, do: {x, y}
-    Enum.find_value(pairs, fn {x, y} ->
-      case rem(x, y) do
-        0 -> div(x, y)
-        _ -> false
-      end
-    end)
+    even_divisors = for x <- row, y <- row, x != y, rem(x, y) == 0, do: div(x, y)
+    hd(even_divisors)
   end
 
   def parse(input) do
