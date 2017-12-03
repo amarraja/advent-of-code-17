@@ -9,7 +9,7 @@ defmodule Day03 do
   end
 
   def part_2 do
-    spiral_grid_stream_children
+    spiral_grid_stream_children()
     |> Stream.drop_while(fn { _x, _y, v } -> v <= @input end)
     |> Stream.take(1)
     |> Enum.to_list
