@@ -3,15 +3,15 @@ defmodule Day03 do
   @input 265149
 
   def part_1 do
-    {x, y, v} = spiral_grid_stream() |> Stream.drop(@input - 1) |> Stream.take(1) |> Enum.to_list |> hd
+    {x, y, v, _} = spiral_grid_stream() |> Stream.drop(@input - 1) |> Stream.take(1) |> Enum.to_list |> hd
     diff = abs(x) + abs(y)
     "Steps for #{v} = #{diff}"
   end
 
   def part_2 do
     spiral_grid_stream_children()
-    |> Stream.drop_while(fn { _x, _y, v } -> v <= @input end)
-    |> Stream.take(1)
+    |> Stream.drop_while(fn { _x, _y, v, _ } -> v <= @input end)
+    |> Stream.take(5)
     |> Enum.to_list
     |> hd
   end
@@ -29,13 +29,13 @@ defmodule Day03 do
 
   def spiral_grid_stream do
     dirs = Stream.concat([:none], directions())
-    Stream.scan(dirs, { 0, 0, 1 }, fn direction, { x, y, v } ->
+    Stream.scan(dirs, { 0, 0, 1, 1 }, fn direction, { x, y, v, index } ->
       case direction do
-        :right -> { x + 1, y, v + 1 }
-        :up ->    { x, y + 1, v + 1 }
-        :left ->  { x - 1, y, v + 1 }
-        :down ->  { x, y - 1, v + 1 }
-        :none -> { x, y, v } #only the first item
+        :right -> { x + 1, y, v + 1, index + 1 }
+        :up ->    { x, y + 1, v + 1, index + 1 }
+        :left ->  { x - 1, y, v + 1, index + 1 }
+        :down ->  { x, y - 1, v + 1, index + 1 }
+        :none -> { x, y, v, index } #only the first item
       end
     end)
   end
@@ -44,23 +44,14 @@ defmodule Day03 do
   def spiral_grid_stream_children do
     { :ok, state } = Agent.start_link(fn -> %{} end)
 
-    dirs = Stream.concat([:none], directions())
-    Stream.scan(dirs, { 0, 0, 1 }, fn direction, { x, y, v } ->
-      { x, y, v } = case direction do
-        :right -> { x + 1, y, 0 }
-        :up ->    { x, y + 1, 0 }
-        :left ->  { x - 1, y, 0 }
-        :down ->  { x, y - 1, 0 }
-        :none -> { x, y, v } #only the first item
+    Stream.map(spiral_grid_stream, fn { x, y, v, index } = record ->
+      { x, y, v, index } = case index do
+        1 -> record
+        _ -> { x, y, get_value(state, x, y), index }
       end
-
-      v = case v do
-        1 -> 1
-        _ -> get_value(state, x, y)
-      end
-
+      
       Agent.update(state, fn map -> Map.put(map, {x, y}, v) end)
-      {x, y, v}
+      {x, y, v, index}
     end)
 
   end
