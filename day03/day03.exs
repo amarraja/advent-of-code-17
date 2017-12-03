@@ -8,6 +8,14 @@ defmodule Day03 do
     "Steps for #{v} = #{diff}"
   end
 
+  def part_2 do
+    spiral_grid_stream_children
+    |> Stream.drop_while(fn { _x, _y, v } -> v <= @input end)
+    |> Stream.take(1)
+    |> Enum.to_list
+    |> hd
+  end
+
 
   def directions do
     Stream.cycle([[:right, :up], [:left, :down]])
@@ -32,8 +40,51 @@ defmodule Day03 do
     end)
   end
 
+
+  def spiral_grid_stream_children do
+    { :ok, state } = Agent.start_link(fn -> %{} end)
+
+    dirs = Stream.concat([:none], directions())
+    Stream.scan(dirs, { 0, 0, 1 }, fn direction, { x, y, v } ->
+      { x, y, v } = case direction do
+        :right -> { x + 1, y, 0 }
+        :up ->    { x, y + 1, 0 }
+        :left ->  { x - 1, y, 0 }
+        :down ->  { x, y - 1, 0 }
+        :none -> { x, y, v } #only the first item
+      end
+
+      v = case v do
+        1 -> 1
+        _ -> get_value(state, x, y)
+      end
+
+      Agent.update(state, fn map -> Map.put(map, {x, y}, v) end)
+      {x, y, v}
+    end)
+
+  end
+
+  def get_value(state, x, y) do
+    neighbours = Agent.get(state, fn m ->
+      keys = [
+        { x - 1, y + 1 },  { x, y + 1 },  { x + 1, y + 1 },
+        { x - 1, y     },                 { x + 1, y },
+        { x - 1, y - 1 },  { x, y - 1 },  { x + 1, y - 1 }
+      ]
+      keys |> Enum.map(fn k -> Map.get(m, k, 0) end)
+    end)
+    Enum.sum(neighbours)
+  end
+  
+
+
+
 end
 
 
 Day03.part_1
+|> IO.inspect
+
+Day03.part_2
 |> IO.inspect
