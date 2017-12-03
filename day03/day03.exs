@@ -16,7 +16,6 @@ defmodule Day03 do
     |> hd
   end
 
-
   def directions do
     Stream.cycle([[:right, :up], [:left, :down]])
     |> Stream.zip(Stream.iterate(1, &(&1+1)))
@@ -40,11 +39,10 @@ defmodule Day03 do
     end)
   end
 
-
   def spiral_grid_stream_children do
     { :ok, state } = Agent.start_link(fn -> %{} end)
 
-    Stream.map(spiral_grid_stream, fn { x, y, v, index } = record ->
+    Stream.map(spiral_grid_stream(), fn { x, y, _v, index } = record ->
       { x, y, v, index } = case index do
         1 -> record
         _ -> { x, y, get_value(state, x, y), index }
@@ -57,19 +55,16 @@ defmodule Day03 do
   end
 
   def get_value(state, x, y) do
-    neighbours = Agent.get(state, fn m ->
-      keys = [
+    Agent.get(state, fn m ->
+      [
         { x - 1, y + 1 },  { x, y + 1 },  { x + 1, y + 1 },
         { x - 1, y     },                 { x + 1, y },
         { x - 1, y - 1 },  { x, y - 1 },  { x + 1, y - 1 }
       ]
-      keys |> Enum.map(fn k -> Map.get(m, k, 0) end)
+      |> Enum.map(fn k -> Map.get(m, k, 0) end)
+      |> Enum.sum()
     end)
-    Enum.sum(neighbours)
   end
-  
-
-
 
 end
 
